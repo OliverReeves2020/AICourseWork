@@ -12,14 +12,18 @@ import pyttsx3
 
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
+"""fred Karen Jorge Luca Mariska """
 for voice in voices:
-    if voice.name == 'english-north':
+    print(voice.name)
+    if voice.name == 'fred':
         engine.setProperty('voice', voice.id)
         break
 
 
-engine.say("Respect to all me homies!")
+engine.say("i like bunsen burners")
 engine.runAndWait()
+
+"""
 
 # Initialize the recognizer and engine instances
 r = sr.Recognizer()
@@ -42,7 +46,7 @@ except sr.UnknownValueError:
 except sr.RequestError as e:
     print("Sorry, there was an error processing your request: {0}".format(e))
 
-
+"""
 
 
 

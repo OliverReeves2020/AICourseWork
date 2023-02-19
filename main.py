@@ -12,6 +12,8 @@ import json, requests
 
 from nltk import Expression, ResolutionProver, ResolutionProverCommand
 
+from VoiceIO import TTS
+
 # insert your personal OpenWeathermap API key here if you have one, and want to use this feature
 APIkey = "5403a1e0442ce1dd18cb1bf7c40e776f"
 
@@ -36,39 +38,58 @@ print("Welcome to this chat bot. Please feel free to ask questions from me!")
 # start knowledge base
 
 read_expr = Expression.fromstring
-#expr = Expression.fromstring("exists x.(company(x) & (contains(x, 'Nike') | contains(x, 'Adidas')))")
+# expr = Expression.fromstring("exists x.(company(x) & (contains(x, 'Nike') | contains(x, 'Adidas')))")
 kb = []
-data = pandas.read_csv('kb.csv',sep='\n', header=None)
+data = pandas.read_csv('kb.csv', sep='\n', header=None)
 [kb.append(read_expr(row)) for row in data[0]]
 # read the knowledge base from a file
 
-print (kb)
+print(kb)
 # Check for internal contradictions
-#An empty list is used to prove in order to check if the knowledge base itself is consistent.
+# An empty list is used to prove in order to check if the knowledge base itself is consistent.
 # If an empty list is consistent, then it means that the KB has no contradictions and is logically sound.
 # This is a quick and simple way to check if t
 # he KB is internally consistent before adding new expressions to it or
 # using it for further reasoning.
+# ~feature(Red_and_Black, Leather)
 try:
     prover = ResolutionProver()
     prover.prove([], kb)
     print('KB is consistent')
 except Exception as e:
-    print("error->",e)
+    print("error->", e)
     quit()
 
 expr = read_expr("colorway(Air_Jordan_1_High, Red_and_Black)")
 print(ResolutionProver().prove(expr, kb, verbose=True))
 
+# set voice flag to false
+textInputFlag = True
+# set voice io
+speech_recognizer = TTS()
 # main loop
 
 while True:
-    # get user input
-    try:
-        userInput = input("> ")
-    except (KeyboardInterrupt, EOFError) as e:
-        print("Bye!")
-        break
+    #get user input
+    #text input options
+    if textInputFlag:
+        try:
+            userInput = input("> ")
+        except (KeyboardInterrupt, EOFError) as e:
+            print("Bye!")
+            break
+        if "_" in userInput:
+            continue
+        if (userInput == "switch to voice"):
+            textInputFlag = True
+            continue
+    #voice input options
+    else:
+        userInput = speech_recognizer.speech_to_text()
+        if userInput == "switch to text":
+            textInputFlag = False
+            continue
+
     # pre-process user input and determine response agent (if needed)
     responseAgent = 'aiml'
     # activate selected response agent
@@ -76,6 +97,7 @@ while True:
         answer = kern.respond(userInput)
     # post-process the answer for commands
     if answer[0] == '#':
+        print(answer)
         params = answer[1:].split('$')
         cmd = int(params[0])
         if cmd == 0:
@@ -134,22 +156,60 @@ while True:
         # this will control how the chatbot interacts with the kb file
         # if input pattern is "I know that * is *"
         elif cmd == 31:
-            object, subject = params[1].split(' is ')
-            expr = read_expr(subject + '(' + object + ')')
+            object, subject = params[1].split(' IS ')
+            # expr = read_expr(subject + '(' + object + ')')
             # >>> ADD SOME CODES HERE to make sure expr does not contradict
             # with the KB before appending, otherwise show an error message.
-            try:
-                prover = ResolutionProverCommand(kb.append(expr))
-                prover.prove()
-                print(f'OK, I will remember that ')
-            except:
-                print('Error: contradiction found')
+            # model(Air_Jordan_1, Air_Jordan_1_High)
+            # if subject has multiple values
+            print(subject)
+            if ("," in subject):
+                print("subject can not have multiple values")
+                continue
+            else:
+                final_subject = subject.replace(" ", "_")
 
-        elif cmd == 32:  # if the input pattern is "check that * is *"
+            # check if object has multiple values in which case split then reformat and combine
+            if ("," in object):
+                words = object.split(",")
+                words = [word.replace(" ", "_") for word in words]
+                final_object = ", ".join(words)
+                print("-->" + final_object)
+                final_object = final_object.replace(", _", ", ")
+                print("-->" + final_object)
+            else:
+                final_object = object.replace(" ", "_")
+
+            expr = read_expr(str(final_subject) + '(' + str(final_object) + ')')
+
+            kb.append(expr)
+            print(kb)
+            print('OK, I will remember that', object, 'is', subject)
+
+        elif cmd == 32:  # if the input pattern is "check that * IS *"
             print(params)
-            object, subject = params[1].split(' is ')
+            print(params[1])
+            object, subject = params[1].split(' IS ')
+            print(str(object))
+            # if subject has multiple values
+            if ("," in subject):
+                print("subject can not have multiple values")
+                continue
+            else:
+                final_subject = subject.replace(" ", "_")
 
-            expr = read_expr(subject + '(' + object + ')')
+            # check if object has multiple values in which case split then reformat and combine
+            if ("," in object):
+                words = object.split(",")
+                words = [word.replace(" ", "_") for word in words]
+                final_object = ", ".join(words)
+                print("-->" + final_object)
+                final_object = final_object.replace(", _", ", ")
+                print("-->" + final_object)
+            else:
+                final_object = object.replace(" ", "_")
+
+            expr = read_expr(str(final_subject) + '(' + str(final_object) + ')')
             print(expr)
             answer = ResolutionProver().prove(expr, kb, verbose=False)
             if answer:

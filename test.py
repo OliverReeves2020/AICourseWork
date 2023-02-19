@@ -23,7 +23,7 @@ for voice in voices:
 engine.say("i like bunsen burners")
 engine.runAndWait()
 
-"""
+
 
 # Initialize the recognizer and engine instances
 r = sr.Recognizer()
@@ -46,7 +46,7 @@ except sr.UnknownValueError:
 except sr.RequestError as e:
     print("Sorry, there was an error processing your request: {0}".format(e))
 
-"""
+
 
 
 

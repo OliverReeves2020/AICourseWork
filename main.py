@@ -1,18 +1,46 @@
-import traceback
-
-import nltk
-import wikipedia
-import aiml
-import pandas
-
 #######################################################
 # Initialise weather agent
 #######################################################
-import json, requests
+import json
 
-from nltk import Expression, ResolutionProver, ResolutionProverCommand
+import nltk
+import requests
+
+import aiml
+import pandas
+import wikipedia
+from nltk import ResolutionProver
+#
+from nltk.sem.logic import *
 
 from VoiceIO import TTS
+
+
+def is_contradictory(KB):
+    clauses = KB.clauses()
+    new_clauses = clauses
+
+    while True:
+        n = len(new_clauses)
+        pairs = [(C1, C2) for i, C1 in enumerate(new_clauses) for C2 in new_clauses[i+1:]]
+        resolvents = set()
+
+        for (C1, C2) in pairs:
+            resolvent = C1.union(C2).simplify()
+            if not resolvent.is_tautology() and resolvent not in resolvents:
+                resolvents.add(resolvent)
+
+        if set([]) in resolvents:
+            return True
+
+        new_clauses = resolvents - set(clauses)
+
+        if len(new_clauses) == n:
+            return False
+
+
+
+
 
 # insert your personal OpenWeathermap API key here if you have one, and want to use this feature
 APIkey = "5403a1e0442ce1dd18cb1bf7c40e776f"
@@ -52,14 +80,11 @@ print(kb)
 # he KB is internally consistent before adding new expressions to it or
 # using it for further reasoning.
 # ~feature(Red_and_Black, Leather)
-try:
-    prover = ResolutionProver()
-    prover.prove([], kb)
-    print('KB is consistent')
-except Exception as e:
-    print("error->", e)
-    quit()
 
+
+print(ResolutionProver().prove([],kb,False))
+
+quit()
 expr = read_expr("colorway(Air_Jordan_1_High, Red_and_Black)")
 print(ResolutionProver().prove(expr, kb, verbose=True))
 
@@ -81,14 +106,20 @@ while True:
         if "_" in userInput:
             continue
         if (userInput == "switch to voice"):
-            textInputFlag = True
+            print("switching to voice")
+            textInputFlag = False
             continue
     #voice input options
     else:
         userInput = speech_recognizer.speech_to_text()
         if userInput == "switch to text":
-            textInputFlag = False
+            textInputFlag = True
             continue
+
+    if len(userInput)==0:
+        textInputFlag = True
+        continue
+
 
     # pre-process user input and determine response agent (if needed)
     responseAgent = 'aiml'

@@ -22,8 +22,8 @@ class TTS:
     def speech_to_text(self):
         with sr.Microphone() as source:
             print("Speak something...")
-            audio = self.recognizer.listen(source)
-
+            # snowboy configuratio settings for key words like hey siri or ok google
+            audio = self.recognizer.listen(source, timeout=3.0)
         try:
             text = self.recognizer.recognize_google(audio)
             print("You said:", text)

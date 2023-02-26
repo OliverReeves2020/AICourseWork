@@ -3,12 +3,15 @@ all x y.(model(x, y) -> exists z.(colorway(y, z) & more_than(z, 1)))
 all x y.(colorway(x, y) -> exists z.(feature(y, z)))
 all x.(Air_jordan(x) -> brand(x, nike))
 
+exists x. (dog(x) & brown(x))
+forall x. (dog(x) -> ~brown(x))
+
 brand(Air_Jordan_1, Nike)
 air_jordan(Air_Jordan_1)
 model(Air_Jordan_1, Air_Jordan_1_High)
+model(Air_Jordan_1, Air_Jordan_1_High)
 colorway(Air_Jordan_1_High, Red_and_Black)
 feature(Red_and_Black, Leather)
-
 brand(Yeezy_Boost_350, Adidas)
 adidas_sneaker(Yeezy_Boost_350)
 model(Yeezy_Boost_350, Yeezy_Boost_350_V2)

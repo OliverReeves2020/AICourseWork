@@ -4,7 +4,7 @@ all x y.(colorway(x, y) -> exists z.(feature(y, z)))
 all x.(Air_jordan(x) -> brand(x, nike))
 
 exists x. (dog(x) & brown(x))
-forall x. (dog(x) -> ~brown(x))
+forall x. (dog(x) -> -brown(x))
 
 brand(Air_Jordan_1, Nike)
 air_jordan(Air_Jordan_1)

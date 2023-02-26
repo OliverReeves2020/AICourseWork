@@ -3,7 +3,6 @@
 #######################################################
 import json
 
-import nltk
 import requests
 
 import aiml
@@ -15,31 +14,32 @@ from nltk.sem.logic import *
 
 from VoiceIO import TTS
 
-
-def is_contradictory(KB):
-    clauses = KB.clauses()
-    new_clauses = clauses
-
-    while True:
-        n = len(new_clauses)
-        pairs = [(C1, C2) for i, C1 in enumerate(new_clauses) for C2 in new_clauses[i+1:]]
-        resolvents = set()
-
-        for (C1, C2) in pairs:
-            resolvent = C1.union(C2).simplify()
-            if not resolvent.is_tautology() and resolvent not in resolvents:
-                resolvents.add(resolvent)
-
-        if set([]) in resolvents:
-            return True
-
-        new_clauses = resolvents - set(clauses)
-
-        if len(new_clauses) == n:
-            return False
+# set voice io
+speech_recognizer = TTS()
+# set mute flag to false, this controls narration of outputs
+muteFlag = False
 
 
+# output function that handles both tts and console outputs
+def display(text):
+    print(text)
+    if muteFlag:
+        speech_recognizer.repeat_speech(text)
+    return
 
+
+def objsplitter(objet):
+    # check if object has multiple values in which case split then reformat and combine
+    if ("," in object):
+        words = object.split(",")
+        words = [word.replace(" ", "_") for word in words]
+        finalobject = ", ".join(words)
+        print("-->" + finalobject)
+        finalobject = finalobject.replace(", _", ", ")
+        print("-->" + finalobject)
+    else:
+        finalobject = object.replace(" ", "_")
+    return finalobject
 
 
 # insert your personal OpenWeathermap API key here if you have one, and want to use this feature
@@ -72,31 +72,24 @@ data = pandas.read_csv('kb.csv', sep='\n', header=None)
 [kb.append(read_expr(row)) for row in data[0]]
 # read the knowledge base from a file
 
-print(kb)
 # Check for internal contradictions
-# An empty list is used to prove in order to check if the knowledge base itself is consistent.
-# If an empty list is consistent, then it means that the KB has no contradictions and is logically sound.
-# This is a quick and simple way to check if t
-# he KB is internally consistent before adding new expressions to it or
-# using it for further reasoning.
-# ~feature(Red_and_Black, Leather)
 
 
-print(ResolutionProver().prove([],kb,False))
+if ResolutionProver().prove(None, kb, False):
+    display("internal error with kb")
+    quit()
 
-quit()
 expr = read_expr("colorway(Air_Jordan_1_High, Red_and_Black)")
 print(ResolutionProver().prove(expr, kb, verbose=True))
 
 # set voice flag to false
 textInputFlag = True
-# set voice io
-speech_recognizer = TTS()
+
 # main loop
 
 while True:
-    #get user input
-    #text input options
+    # get user input
+    # text input options
     if textInputFlag:
         try:
             userInput = input("> ")
@@ -105,21 +98,20 @@ while True:
             break
         if "_" in userInput:
             continue
-        if (userInput == "switch to voice"):
+        if userInput == "switch to voice":
             print("switching to voice")
             textInputFlag = False
             continue
-    #voice input options
+    # voice input options
     else:
         userInput = speech_recognizer.speech_to_text()
         if userInput == "switch to text":
             textInputFlag = True
             continue
 
-    if len(userInput)==0:
+    if len(userInput) == 0:
         textInputFlag = True
         continue
-
 
     # pre-process user input and determine response agent (if needed)
     responseAgent = 'aiml'
@@ -142,7 +134,7 @@ while True:
                 print("Sorry, I do not know that. Be more specific!")
         elif cmd == 2:
             succeeded = False
-            api_url = r"http://api.openweathermap.org/data/2.5/weather?q="
+            api_url = r"https://api.openweathermap.org/data/2.5/weather?q="
             response = requests.get(api_url + params[1] + r"&units=metric&APPID=" + APIkey)
             if response.status_code == 200:
                 response_json = json.loads(response.content)
@@ -163,7 +155,7 @@ while True:
         elif cmd == 3:
             api_url = "https://api.dictionaryapi.dev/api/v2/entries/en/" + params[1]
             response = requests.get(api_url)
-            succeeded = False;
+            succeeded = False
             if response.status_code == 200:
                 response_json = json.loads(response.content)
                 if response_json:
@@ -194,22 +186,14 @@ while True:
             # model(Air_Jordan_1, Air_Jordan_1_High)
             # if subject has multiple values
             print(subject)
-            if ("," in subject):
+            if "," in subject:
                 print("subject can not have multiple values")
                 continue
             else:
                 final_subject = subject.replace(" ", "_")
 
             # check if object has multiple values in which case split then reformat and combine
-            if ("," in object):
-                words = object.split(",")
-                words = [word.replace(" ", "_") for word in words]
-                final_object = ", ".join(words)
-                print("-->" + final_object)
-                final_object = final_object.replace(", _", ", ")
-                print("-->" + final_object)
-            else:
-                final_object = object.replace(" ", "_")
+            final_object = objsplitter(object)
 
             expr = read_expr(str(final_subject) + '(' + str(final_object) + ')')
 
@@ -223,22 +207,14 @@ while True:
             object, subject = params[1].split(' IS ')
             print(str(object))
             # if subject has multiple values
-            if ("," in subject):
+            if "," in subject:
                 print("subject can not have multiple values")
                 continue
             else:
                 final_subject = subject.replace(" ", "_")
 
             # check if object has multiple values in which case split then reformat and combine
-            if ("," in object):
-                words = object.split(",")
-                words = [word.replace(" ", "_") for word in words]
-                final_object = ", ".join(words)
-                print("-->" + final_object)
-                final_object = final_object.replace(", _", ", ")
-                print("-->" + final_object)
-            else:
-                final_object = object.replace(" ", "_")
+            final_object = objsplitter(object)
 
             expr = read_expr(str(final_subject) + '(' + str(final_object) + ')')
             print(expr)
@@ -251,7 +227,11 @@ while True:
                 # >> ADD SOME CODES HERE to find if expr is false, then give a
                 # definite response: either "Incorrect" or "Sorry I don't know."
 
+        elif cmd == 34:
+            print("unavailable right now")
+        # no command found ==99
         elif cmd == 99:
+            # search bow of words model
             print("I did not get that, please try again.")
     else:
         print(answer)

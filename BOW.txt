@@ -1,0 +1,5 @@
+"hi": "Hello!"
+"how are you?": "I'm doing well, thanks for asking!"
+"what are you doing?": "I'm chatting with you!"
+"bye": "Goodbye!"
+"thanks": "You're welcome!"

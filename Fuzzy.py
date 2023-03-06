@@ -63,8 +63,3 @@ class MyFuzzy:
         FS.set_variable("price_level", price_level)
         FS.set_variable("style_level", style_level)
         return FS.Mamdani_inference([query])
-
-
-f = MyFuzzy()
-f.setSystem()
-print(f.getFuzz(0.8, 0.5, 1, 1,"resale_value"))

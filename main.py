@@ -12,7 +12,12 @@ from nltk import ResolutionProver
 #
 from nltk.sem.logic import *
 
+from Fuzzy import MyFuzzy
 from VoiceIO import TTS
+
+
+
+
 
 # set voice io
 speech_recognizer = TTS()
@@ -20,6 +25,10 @@ speech_recognizer = TTS()
 muteFlag = False
 
 
+f = MyFuzzy()
+f.setSystem()
+print(f.getFuzz(0.8, 0.5, 1, 1,"resale_value"))
+quit()
 # output function that handles both tts and console outputs
 def display(text):
     print(text)
@@ -197,9 +206,17 @@ while True:
 
             expr = read_expr(str(final_subject) + '(' + str(final_object) + ')')
 
-            kb.append(expr)
-            print(kb)
-            print('OK, I will remember that', object, 'is', subject)
+            if (ResolutionProver().prove(None, kb + [expr], verbose=True)):
+                print("this contradicts the kb")
+            else:
+
+                # exists x. (dog(x) & brown(x))
+                # forall x. (dog(x) -> -brown(x))
+
+                kb.append(expr)
+
+                # add function that writes new kb to the file
+                print('OK, I will remember that', object, 'is', subject)
 
         elif cmd == 32:  # if the input pattern is "check that * IS *"
             print(params)
@@ -219,19 +236,31 @@ while True:
             expr = read_expr(str(final_subject) + '(' + str(final_object) + ')')
             print(expr)
             answer = ResolutionProver().prove(expr, kb, verbose=False)
+
             if answer:
                 print('Correct.')
             else:
-                print('It may not be true.')
-                # >> This is not an ideal answer.
-                # >> ADD SOME CODES HERE to find if expr is false, then give a
+                # ADD SOME CODES HERE to find if expr is false, then give a
                 # definite response: either "Incorrect" or "Sorry I don't know."
+                # to test for a false expr find the negation of expression
+                neg_expr = NegatedExpression(expr)
+                if ResolutionProver().prove(neg_expr, kb, verbose=False):
+                    print("the opposite is true")
+                else:
+                    print("Sorry I don't know")
 
-        elif cmd == 34:
+        elif cmd == 33:
             print("unavailable right now")
+
+        # fuzzy logic
+        elif cmd == 35:
+
+            input_values = {'price': 100, 'brand': 0.6, 'condition': 0.8}
+
+
         # no command found ==99
         elif cmd == 99:
             # search bow of words model
-            print("I did not get that, please try again.")
+            display("I did not get that, please try again.")
     else:
-        print(answer)
+        display(answer)

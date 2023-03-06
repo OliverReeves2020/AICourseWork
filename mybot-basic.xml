@@ -125,6 +125,15 @@
 <category><pattern> WHAT DO YOU KNOW</pattern>
   <template>#33$</template></category>
 
+<!-- Fuzzy Logic input -->
+<category><pattern> FUZ I KNOW THAT * IS *</pattern>
+  <template>#34$<star index="1"/> IS <star index="2"/></template></category>
+
+<category><pattern> FUZ CHECK THAT * IS *</pattern>
+  <template>#35$<star index="1"/> IS <star index="2"/></template></category>
+<category><pattern> FUZ WHAT DO YOU KNOW</pattern>
+  <template>#36$</template></category>
+
 <!-- Default reaction -->
 
 <category><pattern> * </pattern>

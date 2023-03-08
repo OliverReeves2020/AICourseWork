@@ -15,20 +15,15 @@ from nltk.sem.logic import *
 from Fuzzy import MyFuzzy
 from VoiceIO import TTS
 
-
-
-
-
 # set voice io
 speech_recognizer = TTS()
 # set mute flag to false, this controls narration of outputs
 muteFlag = False
 
+fuzzer = MyFuzzy()
+fuzzer.setSystem()
 
-f = MyFuzzy()
-f.setSystem()
-print(f.getFuzz(0.8, 0.5, 1, 1,"resale_value"))
-quit()
+
 # output function that handles both tts and console outputs
 def display(text):
     print(text)
@@ -255,7 +250,37 @@ while True:
         # fuzzy logic
         elif cmd == 35:
 
-            input_values = {'price': 100, 'brand': 0.6, 'condition': 0.8}
+            query = None
+            while query not in ["hype", "resale", "X"]:
+                query = input("enter 'hype' or 'resale' predictor or X to return")
+
+            if query != "X":
+
+                flag = False
+                while not flag:
+                    args = input(
+                        "Input brand_level, fit_level, price_level, style_level separated by commas in ranges 0 to 1: ")
+                    args_list = args.split(",")
+                    if len(args_list) != 4:
+                        print("Please input exactly 4 arguments separated by commas.")
+                        # You can choose to exit the program or ask for input again here
+
+                    # Convert string arguments to floats
+                    try:
+                        brand_level, fit_level, price_level, style_level = map(float, args_list)
+                    except ValueError:
+                        print("Please input valid numbers in the range 0 to 1.")
+                        # You can choose to exit the program or ask for input again here
+
+                    # Check if arguments are in the range 0 to 1
+                    if not all(0 <= arg <= 1 for arg in [brand_level, fit_level, price_level, style_level]):
+                        print("Please input numbers in the range 0 to 1.")
+                        # You can choose to exit the program or ask for input again here
+                    else:
+                        flag = True
+                query_map = {"hype": "hype_level", "resale": "resale_value"}
+                query = query_map[query]
+                print(fuzzer.getFuzz(brand_level, fit_level, price_level, style_level, query))
 
 
         # no command found ==99

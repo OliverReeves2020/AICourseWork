@@ -32,16 +32,3 @@ class SentenceAnalyser():
             features['contains({})'.format(word.lower())] = True
         # Return the dictionary of features
         return features
-
-
-
-
-
-
-
-sen=SentenceAnalyser()
-
-while True:
-    q=input("q:")
-    print(sen.classifier.classify(sen.dialogue_act_features(q)))
-

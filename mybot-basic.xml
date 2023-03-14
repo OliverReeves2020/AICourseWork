@@ -54,9 +54,6 @@
 <category><pattern> WHAT IS AN * </pattern>
   <template><srai>WHAT IS A <star/></srai></template></category>
 
-  <category><pattern> WHAT ARE * </pattern>
-  <template><srai>WHAT IS A <star/></srai></template></category>
-
 <category><pattern> WHAT IS * </pattern>
   <template><srai>WHAT IS A <star/></srai></template></category>
 
@@ -97,24 +94,6 @@
   <srai>PRICE OF <star/></srai></template></category>
   <!-- sneakerapi -->
 
-  <!--- Logic Based -->
-<category><pattern> WHAT IS A * </pattern>
-  <template>#1$<star index="1"/></template></category>
-
-<category><pattern> WHAT IS AN * </pattern>
-  <template><srai>WHAT IS A <star/></srai></template></category>
-
-  <category><pattern> WHAT ARE * </pattern>
-  <template><srai>WHAT IS A <star/></srai></template></category>
-
-<category><pattern> WHAT IS * </pattern>
-  <template><srai>WHAT IS A <star/></srai></template></category>
-
-
-<category><pattern> WHO IS * </pattern>
-  <template><srai>WHAT IS A <star/></srai></template></category>
-
-
 
 <!-- Logic input -->
 <category><pattern> I KNOW THAT * IS *</pattern>
@@ -133,6 +112,10 @@
   <template>#35$<star index="1"/> IS <star index="2"/></template></category>
 <category><pattern> FUZ WHAT DO YOU KNOW</pattern>
   <template>#36$</template></category>
+
+<!-- ML/AI -->
+<category><pattern>WHAT IS IN THIS</pattern><template>#50$</template></category>
+<category><pattern>WHAT COLOURS ARE IN THIS</pattern><template>#51$</template></category>
 
 <!-- Default reaction -->
 

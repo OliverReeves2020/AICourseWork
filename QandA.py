@@ -5,9 +5,11 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk import pos_tag, ne_chunk
 
+#using tfid rather than bow but can easily switch with one line change
 
 class QnAMatcher:
     def __init__(self, qna_file):
@@ -18,9 +20,11 @@ class QnAMatcher:
                 question = row[0]
                 answer = row[1]
                 self.qna_pairs.append((question, answer))
-        self.vectorizer = TfidfVectorizer()
+        self.vectorizer = CountVectorizer()
+        self.tdvectorizer = TfidfVectorizer()
         self.corpus = [q for q, a in self.qna_pairs]
         self.X = self.vectorizer.fit_transform(self.corpus)
+        self.Y = self.tdvectorizer.fit_transform(self.corpus)
         self.lemmatizer = WordNetLemmatizer()
 
     def preprocess_input(self, user_input):
@@ -52,10 +56,11 @@ class QnAMatcher:
         return processed_input
 
     def find_similar_question(self, user_input):
+        u=user_input
         # Preprocess the user's input
         user_input = self.preprocess_input(user_input)
 
-        # Use tf-idf to represent the Q/As
+        # Use bow to represent the Q/As
         user_input_vector = self.vectorizer.transform([user_input])
 
         # Use cosine similarity to find the most similar question
@@ -63,6 +68,26 @@ class QnAMatcher:
         most_similar_idx = similarities.argmax()
         most_similar_question = self.qna_pairs[most_similar_idx][0]
         most_similar_answer = self.qna_pairs[most_similar_idx][1]
-        similarity_score = similarities[0, most_similar_idx]
 
-        return most_similar_question, most_similar_answer,similarity_score
+        if(similarities[0][most_similar_idx])<0.2:
+            # Preprocess the user's input
+            user_input = self.preprocess_input(u)
+
+            # Use tf-idf to represent the Q/As
+            user_input_vector = self.tdvectorizer.transform([user_input])
+
+            # Use cosine similarity to find the most similar question
+            similarities = cosine_similarity(user_input_vector, self.Y)
+            most_similar_idx = similarities.argmax()
+            most_similar_question = self.qna_pairs[most_similar_idx][0]
+            most_similar_answer = self.qna_pairs[most_similar_idx][1]
+
+
+            if (similarities[0][most_similar_idx]) < 0.2:
+                return(None,None)
+            else:
+                return most_similar_question,most_similar_answer
+        else:
+            return most_similar_question,most_similar_answer
+
+

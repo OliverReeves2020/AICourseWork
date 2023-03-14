@@ -2,6 +2,7 @@
 # Initialise weather agent
 #######################################################
 import json
+import random
 
 import requests
 
@@ -9,19 +10,45 @@ import aiml
 import pandas
 import wikipedia
 from nltk import ResolutionProver
+from nltk.sentiment import SentimentIntensityAnalyzer
 #
 from nltk.sem.logic import *
 
 from Fuzzy import MyFuzzy
+from QandA import QnAMatcher
+from SentanceAnalyser import SentenceAnalyser
 from VoiceIO import TTS
 
 # set voice io
 speech_recognizer = TTS()
 # set mute flag to false, this controls narration of outputs
-muteFlag = False
+muteFlag = True
 
 fuzzer = MyFuzzy()
 fuzzer.setSystem()
+
+# custom sentence analyser function
+SentenceAnalyser = SentenceAnalyser()
+
+
+# sentiment analysis function and responses
+def sentiment(text):
+    sid = SentimentIntensityAnalyzer()
+    scores = sid.polarity_scores(text)
+    return scores["compound"]
+
+
+positive_responses = [
+    "Great job! Keep it up!",
+    "You're doing great!",
+    "You're a sneaker expert!",
+    "You know your stuff!"
+]
+negative_responses = [
+    "You need to improve.",
+    "This is not good enough.",
+    "You're making mistakes.",
+    "You're not doing well."]
 
 
 # output function that handles both tts and console outputs
@@ -82,9 +109,6 @@ data = pandas.read_csv('kb.csv', sep='\n', header=None)
 if ResolutionProver().prove(None, kb, False):
     display("internal error with kb")
     quit()
-
-expr = read_expr("colorway(Air_Jordan_1_High, Red_and_Black)")
-print(ResolutionProver().prove(expr, kb, verbose=True))
 
 # set voice flag to false
 textInputFlag = True
@@ -227,7 +251,6 @@ while True:
 
             # check if object has multiple values in which case split then reformat and combine
             final_object = objsplitter(object)
-
             expr = read_expr(str(final_subject) + '(' + str(final_object) + ')')
             print(expr)
             answer = ResolutionProver().prove(expr, kb, verbose=False)
@@ -236,8 +259,7 @@ while True:
                 print('Correct.')
             else:
                 # ADD SOME CODES HERE to find if expr is false, then give a
-                # definite response: either "Incorrect" or "Sorry I don't know."
-                # to test for a false expr find the negation of expression
+                # definite response: either "the opposite is true" or "Sorry I don't know."
                 neg_expr = NegatedExpression(expr)
                 if ResolutionProver().prove(neg_expr, kb, verbose=False):
                     print("the opposite is true")
@@ -245,7 +267,11 @@ while True:
                     print("Sorry I don't know")
 
         elif cmd == 33:
-            print("unavailable right now")
+            print("my knowledge base is as follows:\n")
+            for i in kb:
+                print(i)
+            print("i also have a fuzzy knowledge base")
+
 
         # fuzzy logic
         elif cmd == 35:
@@ -282,10 +308,54 @@ while True:
                 query = query_map[query]
                 print(fuzzer.getFuzz(brand_level, fit_level, price_level, style_level, query))
 
+        # ai/task c
+        elif (cmd == 50 or cmd == 51):
+            imagepath = input('enter image path')
+            print(imagepath)
+            # image recognition
+            if cmd == 50:
+                print("image recognition")
+            # colour detection
+            elif cmd == 51:
+                print("colour detection")
 
         # no command found ==99
         elif cmd == 99:
-            # search bow of words model
-            display("I did not get that, please try again.")
+            # use the cusom analyser that has been trained on corpus to workout what type of sentence
+
+            sentencetype = SentenceAnalyser.classifier.classify(SentenceAnalyser.dialogue_act_features(params[1]))
+            print(sentencetype)
+            # if sentenece type is a question
+            if "Question" in sentencetype:
+                # search bow of words model
+                matcher = QnAMatcher('sampleQA.csv')
+                question, answer = matcher.find_similar_question(params[1])
+
+                if (question and answer) is None:
+                    display("I did not get that, please try again.")
+                else:
+                    display(question)
+                    display(answer)
+
+            elif "Statement" in sentencetype:
+                # carry out sentiment analysis
+                senty = sentiment(params[1])
+                if senty > 0.2:
+                    display(random.choice(positive_responses))
+                elif senty < -0.2:
+                    display(random.choice(negative_responses))
+                else:
+                    display("I did not get that, please try again.")
+            elif "Greet" in sentencetype:
+                display("hello")
+            elif "Bye" in sentencetype:
+                display("bye")
+            else:
+                display("I did not get that, please try again.")
+
+
+
+
+
     else:
         display(answer)
